@@ -1,0 +1,60 @@
+name: Autograding Tests
+'on':
+- push
+- repository_dispatch
+permissions:
+  checks: write
+  actions: read
+  contents: read
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Test App
+      id: test-app
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Test App
+        setup-command: npm install
+        command: npm test -- App.test
+        timeout: 5
+        max-score: 1
+    - name: Setup Notifications Test
+      id: setup-notifications-test
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Setup Notifications Test
+        setup-command: npm install
+        command: npm test -- Setup.test
+        timeout: 5
+        max-score: 3
+    - name: Send Notifications Test
+      id: send-notifications-test
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Send Notifications Test
+        setup-command: npm install
+        command: npm test -- Notify.test
+        timeout: 5
+        max-score: 3
+    - name: Cancel Notifications Test
+      id: cancel-notifications-test
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Cancel Notifications Test
+        setup-command: npm install
+        command: npm test -- Cancel.test
+        timeout: 5
+        max-score: 3
+    - name: Autograding Reporter
+      uses: classroom-resources/autograding-grading-reporter@v1
+      env:
+        TEST-APP_RESULTS: "${{steps.test-app.outputs.result}}"
+        SETUP-NOTIFICATIONS-TEST_RESULTS: "${{steps.setup-notifications-test.outputs.result}}"
+        SEND-NOTIFICATIONS-TEST_RESULTS: "${{steps.send-notifications-test.outputs.result}}"
+        CANCEL-NOTIFICATIONS-TEST_RESULTS: "${{steps.cancel-notifications-test.outputs.result}}"
+      with:
+        runners: test-app,setup-notifications-test,send-notifications-test,cancel-notifications-test
